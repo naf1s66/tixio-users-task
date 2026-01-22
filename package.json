@@ -1,0 +1,16 @@
+{
+  "name": "tixio-users",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter backend start:dev",
+    "build": "pnpm --filter backend build",
+    "start": "pnpm --filter backend start:prod",
+    "prisma:generate": "pnpm --filter backend prisma generate",
+    "prisma:push": "pnpm --filter backend prisma db push",
+    "seed": "pnpm --filter backend seed"
+  }
+}
