@@ -19,6 +19,10 @@ function roleBadgeVariant(role: Role) {
   return role;
 }
 
+function roleLabel(role: Role) {
+  return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
 function UsersListItem({
   user,
   selected,
@@ -38,7 +42,7 @@ function UsersListItem({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="font-medium">{user.name}</div>
-        <Badge>{roleBadgeVariant(user.role)}</Badge>
+        <Badge>{roleLabel(roleBadgeVariant(user.role))}</Badge>
       </div>
       <div className="mt-1 text-sm text-muted-foreground flex items-center gap-2">
         <span
@@ -183,9 +187,9 @@ export default function App() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">admin</SelectItem>
-                <SelectItem value="editor">editor</SelectItem>
-                <SelectItem value="viewer">viewer</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="editor">Editor</SelectItem>
+                <SelectItem value="viewer">Viewer</SelectItem>
               </SelectContent>
             </Select>
 
@@ -196,12 +200,12 @@ export default function App() {
               title={usersQuery.isLoading ? "Disabled while loading" : "Toggle sort"}
               className={[
                 "relative w-[150px] justify-center gap-2 transition-colors",
-                sortByName ? "border-primary text-primary" : ""
+                sortByName ? "border-black bg-black text-white hover:bg-black/90" : ""
               ].join(" ")}
               aria-pressed={sortByName}
             >
-              <ArrowUpAZ className={sortByName ? "h-4 w-4" : "h-4 w-4 text-muted-foreground"} />
-              Sort by Name
+              <ArrowUpAZ className={sortByName ? "h-4 w-4 text-white" : "h-4 w-4 text-muted-foreground"} />
+              {sortByName ? "Sorted A-Z" : "Sort by Name"}
               {sortByName ? (
                 <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-500" />
               ) : null}
@@ -288,7 +292,7 @@ export default function App() {
                   <div className="text-xl font-semibold">{userQuery.data.name}</div>
                   <div className="text-sm text-muted-foreground">{userQuery.data.email}</div>
                   <div className="flex items-center gap-2">
-                    <Badge>{userQuery.data.role}</Badge>
+                    <Badge>{roleLabel(userQuery.data.role)}</Badge>
                     <span
                       className={[
                         "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium",
