@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchUser, fetchUsers, toggleActive, type Role, type User } from "@/lib/api";
+import { fetchUser, fetchUsers, toggleActive, type PaginatedResponse, type Role, type User } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/select";
 
 function roleBadgeVariant(role: Role) {
-  // keeping it simple; shadcn Badge has variants if you configured them
   return role;
 }
 
@@ -69,29 +68,34 @@ export default function App() {
   const [role, setRole] = useState<Role | "">("");
   const [sortByName, setSortByName] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
-  // Users list (React Query handles cancellation if we pass signal in queryFn)
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, role]);
+
   const usersQuery = useQuery({
-    queryKey: ["users", { search, role }],
-    queryFn: ({ signal }) => fetchUsers({ search, role }, signal),
+    queryKey: ["users", { search, role, page, limit }],
+    queryFn: ({ signal }) => fetchUsers({ search, role, page, limit }, signal),
     staleTime: 0
   });
 
   const sortedUsers = useMemo(() => {
-    const list = usersQuery.data ?? [];
+    const list = usersQuery.data?.data ?? [];
     if (!sortByName) return list;
     return [...list].sort((a, b) => a.name.localeCompare(b.name));
-  }, [usersQuery.data, sortByName]);
+  }, [usersQuery.data?.data, sortByName]);
 
   // Ensure selected user stays valid after refetch/filter
   useEffect(() => {
     if (!selectedId) return;
     if (usersQuery.isLoading) return;
-    const exists = (usersQuery.data ?? []).some((u) => u.id === selectedId);
+    const exists = (usersQuery.data?.data ?? []).some((u) => u.id === selectedId);
     if (!exists) setSelectedId(null);
-  }, [usersQuery.data, usersQuery.isLoading, selectedId]);
+  }, [usersQuery.data?.data, usersQuery.isLoading, selectedId]);
 
-  // User details query
   const userQuery = useQuery({
     queryKey: ["user", selectedId],
     queryFn: ({ signal }) => {
@@ -101,7 +105,6 @@ export default function App() {
     enabled: !!selectedId
   });
 
-  // Bonus: viewing profile timer
   const [secondsViewing, setSecondsViewing] = useState(0);
   useEffect(() => {
     setSecondsViewing(0);
@@ -111,25 +114,25 @@ export default function App() {
     return () => window.clearInterval(t);
   }, [selectedId]);
 
-  // Optimistic toggle mutation
   const toggleMutation = useMutation({
     mutationFn: (id: string) => toggleActive(id),
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: ["users"] });
       await qc.cancelQueries({ queryKey: ["user", id] });
 
-      const prevUsers = qc.getQueryData<User[]>(["users", { search, role }]);
+      const prevUsers = qc.getQueryData<PaginatedResponse<User>>(["users", { search, role, page, limit }]);
       const prevUser = qc.getQueryData<User>(["user", id]);
 
-      // optimistic update list
       if (prevUsers) {
-        qc.setQueryData<User[]>(
-          ["users", { search, role }],
-          prevUsers.map((u) => (u.id === id ? { ...u, active: !u.active } : u))
+        qc.setQueryData<PaginatedResponse<User>>(
+          ["users", { search, role, page, limit }],
+          {
+            ...prevUsers,
+            data: prevUsers.data.map((u) => (u.id === id ? { ...u, active: !u.active } : u))
+          }
         );
       }
 
-      // optimistic update details
       if (prevUser) {
         qc.setQueryData<User>(["user", id], { ...prevUser, active: !prevUser.active });
       }
@@ -137,11 +140,10 @@ export default function App() {
       return { prevUsers, prevUser };
     },
     onError: (_err, id, ctx) => {
-      if (ctx?.prevUsers) qc.setQueryData(["users", { search, role }], ctx.prevUsers);
+      if (ctx?.prevUsers) qc.setQueryData(["users", { search, role, page, limit }], ctx.prevUsers);
       if (ctx?.prevUser) qc.setQueryData(["user", id], ctx.prevUser);
     },
     onSuccess: (updated) => {
-      // ensure caches align with server response
       qc.setQueryData<User>(["user", updated.id], updated);
       qc.invalidateQueries({ queryKey: ["users"] });
     }
@@ -205,16 +207,44 @@ export default function App() {
               ) : sortedUsers.length === 0 ? (
                 <div className="text-sm text-muted-foreground">No users found.</div>
               ) : (
-                <div className="space-y-2">
-                  {sortedUsers.map((u) => (
-                    <UsersListItem
-                      key={u.id}
-                      user={u}
-                      selected={u.id === selectedId}
-                      onClick={() => setSelectedId(u.id)}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="space-y-2">
+                    {sortedUsers.map((u) => (
+                      <UsersListItem
+                        key={u.id}
+                        user={u}
+                        selected={u.id === selectedId}
+                        onClick={() => setSelectedId(u.id)}
+                      />
+                    ))}
+                  </div>
+                  {usersQuery.data && usersQuery.data.meta.totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <span className="text-sm text-muted-foreground">
+                        Page {usersQuery.data.meta.page} of {usersQuery.data.meta.totalPages}
+                        {" "}({usersQuery.data.meta.total} total)
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p) => p - 1)}
+                          disabled={page === 1 || usersQuery.isFetching}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p) => p + 1)}
+                          disabled={page >= usersQuery.data.meta.totalPages || usersQuery.isFetching}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
