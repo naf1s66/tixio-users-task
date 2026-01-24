@@ -1,56 +1,91 @@
 # Fullstack Users Dashboard
 
-## Tech
-- Frontend: Vite + React + TypeScript, React Query, Tailwind, shadcn/ui
-- Backend: NestJS + TypeScript, MongoDB, Prisma (6.19.2), Swagger OpenAPI
+A full-stack application that displays a list of users with search, filtering, pagination, and a details view.
+
+## Tech Stack
+
+**Frontend:** Vite + React + TypeScript, React Query, Tailwind CSS, shadcn/ui
+
+**Backend:** NestJS + TypeScript, MongoDB, Prisma 6.19.2, Swagger OpenAPI
 
 ## Setup
 
-### 1) Start MongoDB
-Example with local MongoDB:
-- `mongodb://localhost:27017/fullstack_users`
+### Prerequisites
+- Node.js 20+
+- PNPM
+- MongoDB (local or Atlas)
 
-### 2) Install
-From repo root:
+### Installation
+
 ```bash
+# Install dependencies
 pnpm install
 ```
 
-### 3) Backend
+### Backend
+
 ```bash
 cd apps/backend
 cp .env.example .env
+# Edit .env with your MongoDB connection string
+
 pnpm prisma:generate
 pnpm prisma:push
 pnpm seed
 pnpm dev
 ```
 
-Swagger: http://localhost:3000/docs
+Swagger docs: http://localhost:3000/docs
 
-### 4) Frontend
+### Frontend
+
 ```bash
 cd apps/frontend
 cp .env.example .env
 pnpm dev
 ```
 
-Frontend: http://localhost:5173
+App: http://localhost:5173
 
-## API
-- `GET /users?search=&role=`
-- `GET /users/:id`
-- `PATCH /users/:id/toggle-active`
+## API Endpoints
 
-## Done
-- Search & role filter
-- React Query fetching + request cancellation via AbortSignal
-- Sort by name (disabled while loading)
-- Details view with skeleton
-- Optimistic toggle active
-- Bonus: viewing profile timer
-- Swagger OpenAPI docs
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/users?search=&role=&page=&limit=` | List users with pagination |
+| GET | `/users/:id` | Get user by ID |
+| PATCH | `/users/:id/toggle-active` | Toggle user active status |
 
-## Not done
-- Pagination (optional)
-- Deployment (optional)
+## What is Done
+
+### Core Requirements
+- [x] PNPM Workspaces monorepo structure
+- [x] User model with all required fields (id, name, email, role, active, createdAt)
+- [x] GET /users endpoint with search (by name) and role filter
+- [x] GET /users/:id endpoint
+- [x] PATCH /users/:id/toggle-active endpoint
+- [x] React Query for data fetching
+- [x] Search input with automatic refetch
+- [x] Request cancellation via AbortSignal when typing quickly
+- [x] Role filter dropdown
+- [x] Sort by Name button
+- [x] Users list displaying name, role badge, and active status
+- [x] User details panel
+- [x] Loading skeleton while fetching details
+
+### Bonus Features
+- [x] Activity indicator ("Viewing profile for X seconds")
+- [x] Strong TypeScript typing throughout
+- [x] Disable sorting while loading
+- [x] Optimistic update for toggle active (with rollback on error)
+- [x] OpenAPI/Swagger documentation
+
+### Additional Features
+- [x] Pagination with Previous/Next controls
+
+## What is Not Done
+
+- [ ] Live deployment (optional per instructions)
+
+## Deviations
+
+None. The implementation follows all specified requirements using the recommended tech stack.

@@ -11,7 +11,9 @@ export class UsersController {
   @Get("users")
   @ApiQuery({ name: "search", required: false, type: String })
   @ApiQuery({ name: "role", required: false, enum: ["admin", "editor", "viewer"] })
-  @ApiOkResponse({ description: "List users" })
+  @ApiQuery({ name: "page", required: false, type: Number, example: 1 })
+  @ApiQuery({ name: "limit", required: false, type: Number, example: 10 })
+  @ApiOkResponse({ description: "List users with pagination" })
   list(@Query() query: GetUsersQueryDto) {
     return this.users.list(query);
   }

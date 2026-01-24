@@ -9,6 +9,9 @@ export class UsersService {
 
   async list(query: GetUsersQueryDto) {
     const where: Prisma.UserWhereInput = {};
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
 
     if (query.search?.trim()) {
       where.name = { contains: query.search.trim(), mode: "insensitive" };
@@ -18,10 +21,25 @@ export class UsersService {
       where.role = query.role;
     }
 
-    return this.prisma.user.findMany({
-      where,
-      orderBy: { createdAt: "desc" }
-    });
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit
+      }),
+      this.prisma.user.count({ where })
+    ]);
+
+    return {
+      data: users,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   async getById(id: string) {
