@@ -181,8 +181,9 @@ export default function App() {
           </div>
 
           <div className="flex gap-3 items-center">
-            <Select value={role || "all"} onValueChange={(v) => setRole(v === "all" ? "" : (v as Role))}>
-              <SelectTrigger className="w-[160px] min-w-[160px] max-w-[160px] shrink-0">
+            <div className="w-[160px] shrink-0">
+              <Select value={role || "all"} onValueChange={(v) => setRole(v === "all" ? "" : (v as Role))}>
+                <SelectTrigger className="w-full min-w-0">
                 <SelectValue className="truncate" placeholder="Role" />
               </SelectTrigger>
               <SelectContent>
@@ -192,24 +193,29 @@ export default function App() {
                 <SelectItem value="viewer">Viewer</SelectItem>
               </SelectContent>
             </Select>
+            </div>
 
-            <Button
-              variant="outline"
-              onClick={() => setSortByName((s) => !s)}
-              disabled={usersQuery.isLoading}
-              title={usersQuery.isLoading ? "Disabled while loading" : "Toggle sort"}
-              className={[
-                "relative w-[150px] justify-center gap-2 transition-colors",
-                sortByName ? "border-black bg-black text-white hover:bg-black/90" : ""
-              ].join(" ")}
-              aria-pressed={sortByName}
-            >
-              <ArrowUpAZ className={sortByName ? "h-4 w-4 text-white" : "h-4 w-4 text-muted-foreground"} />
-              {sortByName ? "Sorted A-Z" : "Sort by Name"}
-              {sortByName ? (
-                <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-500" />
-              ) : null}
-            </Button>
+            <div className="w-[150px] shrink-0">
+              <Button
+                variant="outline"
+                onClick={() => setSortByName((s) => !s)}
+                disabled={usersQuery.isLoading}
+                title={usersQuery.isLoading ? "Disabled while loading" : "Toggle sort"}
+                className={[
+                  "relative w-full justify-center gap-2 transition-colors",
+                  sortByName
+                    ? "border-black bg-black text-white hover:bg-black/90 hover:text-white"
+                    : ""
+                ].join(" ")}
+                aria-pressed={sortByName}
+              >
+                <ArrowUpAZ className={sortByName ? "h-4 w-4 text-white" : "h-4 w-4 text-muted-foreground"} />
+                {sortByName ? "Sorted A-Z" : "Sort by Name"}
+                {sortByName ? (
+                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-500" />
+                ) : null}
+              </Button>
+            </div>
           </div>
         </div>
 
