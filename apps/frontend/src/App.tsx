@@ -32,7 +32,7 @@ function UsersListItem({
     <button
       onClick={onClick}
       className={[
-        "w-full text-left rounded-lg border p-3 transition",
+        "w-full text-left rounded-lg border p-3 transition-colors duration-200",
         selected ? "bg-muted" : "hover:bg-muted/60"
       ].join(" ")}
     >
@@ -164,20 +164,21 @@ export default function App() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-6xl p-6 space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex-1 flex items-center gap-2">
-            <Input
-              placeholder="Search users..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <div className="flex h-9 w-9 items-center justify-center rounded-md border text-muted-foreground">
-              <Search className="h-4 w-4" />
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pr-10"
+                placeholder="Search users..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
 
           <div className="flex gap-3 items-center">
             <Select value={role || "all"} onValueChange={(v) => setRole(v === "all" ? "" : (v as Role))}>
-              <SelectTrigger className="w-[160px] min-w-[160px] shrink-0">
+              <SelectTrigger className="w-[160px] min-w-[160px] max-w-[160px] shrink-0">
                 <SelectValue className="truncate" placeholder="Role" />
               </SelectTrigger>
               <SelectContent>
@@ -189,15 +190,21 @@ export default function App() {
             </Select>
 
             <Button
-              variant={sortByName ? "default" : "outline"}
+              variant="outline"
               onClick={() => setSortByName((s) => !s)}
               disabled={usersQuery.isLoading}
               title={usersQuery.isLoading ? "Disabled while loading" : "Toggle sort"}
-              className="gap-2"
+              className={[
+                "relative w-[150px] justify-center gap-2 transition-colors",
+                sortByName ? "border-primary text-primary" : ""
+              ].join(" ")}
               aria-pressed={sortByName}
             >
-              <ArrowUpAZ className="h-4 w-4" />
-              {sortByName ? "Sorted by Name" : "Sort by Name"}
+              <ArrowUpAZ className={sortByName ? "h-4 w-4" : "h-4 w-4 text-muted-foreground"} />
+              Sort by Name
+              {sortByName ? (
+                <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-500" />
+              ) : null}
             </Button>
           </div>
         </div>
@@ -222,7 +229,7 @@ export default function App() {
                 <div className="text-sm text-muted-foreground">No users found.</div>
               ) : (
                 <>
-                  <div className="space-y-2">
+                  <div className="space-y-2 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
                     {sortedUsers.map((u) => (
                       <UsersListItem
                         key={u.id}
@@ -277,7 +284,7 @@ export default function App() {
                   Failed to load user. {(userQuery.error as Error)?.message}
                 </div>
               ) : userQuery.data ? (
-                <div className="space-y-3">
+                <div className="space-y-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300">
                   <div className="text-xl font-semibold">{userQuery.data.name}</div>
                   <div className="text-sm text-muted-foreground">{userQuery.data.email}</div>
                   <div className="flex items-center gap-2">
