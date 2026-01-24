@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowUpAZ, CheckCircle2, Search, XCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -40,10 +41,20 @@ function UsersListItem({
         <Badge>{roleBadgeVariant(user.role)}</Badge>
       </div>
       <div className="mt-1 text-sm text-muted-foreground flex items-center gap-2">
-        <span className={user.active ? "text-emerald-600" : "text-zinc-500"}>
+        <span
+          className={[
+            "inline-flex items-center gap-1 text-xs font-medium",
+            user.active ? "text-emerald-600" : "text-rose-600"
+          ].join(" ")}
+        >
+          {user.active ? (
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          ) : (
+            <XCircle className="h-3.5 w-3.5" />
+          )}
           {user.active ? "active" : "inactive"}
         </span>
-        <span className="text-xs">•</span>
+        <span className="text-xs">-</span>
         <span className="text-xs">{user.email}</span>
       </div>
     </button>
@@ -153,21 +164,21 @@ export default function App() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-6xl p-6 space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex-1">
+          <div className="flex-1 flex items-center gap-2">
             <Input
               placeholder="Search users..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <div className="mt-2 text-xs text-muted-foreground">
-              Typing refetches automatically; previous requests are cancelled via AbortSignal.
+            <div className="flex h-9 w-9 items-center justify-center rounded-md border text-muted-foreground">
+              <Search className="h-4 w-4" />
             </div>
           </div>
 
           <div className="flex gap-3 items-center">
             <Select value={role || "all"} onValueChange={(v) => setRole(v === "all" ? "" : (v as Role))}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Role" />
+              <SelectTrigger className="w-[160px] min-w-[160px] shrink-0">
+                <SelectValue className="truncate" placeholder="Role" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
@@ -178,11 +189,14 @@ export default function App() {
             </Select>
 
             <Button
-              variant="outline"
+              variant={sortByName ? "default" : "outline"}
               onClick={() => setSortByName((s) => !s)}
               disabled={usersQuery.isLoading}
               title={usersQuery.isLoading ? "Disabled while loading" : "Toggle sort"}
+              className="gap-2"
+              aria-pressed={sortByName}
             >
+              <ArrowUpAZ className="h-4 w-4" />
               {sortByName ? "Sorted by Name" : "Sort by Name"}
             </Button>
           </div>
@@ -268,23 +282,36 @@ export default function App() {
                   <div className="text-sm text-muted-foreground">{userQuery.data.email}</div>
                   <div className="flex items-center gap-2">
                     <Badge>{userQuery.data.role}</Badge>
-                    <span className={userQuery.data.active ? "text-emerald-600" : "text-zinc-500"}>
+                    <span
+                      className={[
+                        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium",
+                        userQuery.data.active
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-rose-200 bg-rose-50 text-rose-700"
+                      ].join(" ")}
+                    >
+                      {userQuery.data.active ? (
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5" />
+                      )}
                       {userQuery.data.active ? "active" : "inactive"}
                     </span>
                   </div>
 
-                  <div className="mt-2 text-sm">
-                    <span className="font-medium">⭐ Bonus:</span>{" "}
-                    <span className="text-muted-foreground">
-                      Viewing profile for {secondsViewing} seconds
-                    </span>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Viewing profile for {secondsViewing} seconds
                   </div>
 
                   <Button
                     onClick={() => toggleMutation.mutate(userQuery.data.id)}
                     disabled={toggleMutation.isPending}
                   >
-                    {toggleMutation.isPending ? "Toggling..." : "Toggle Active"}
+                    {toggleMutation.isPending
+                      ? "Toggling..."
+                      : userQuery.data.active
+                        ? "Deactivate"
+                        : "Activate"}
                   </Button>
                 </div>
               ) : null}
@@ -293,7 +320,8 @@ export default function App() {
         </div>
 
         <div className="text-xs text-muted-foreground">
-          Backend Swagger: <span className="font-mono">http://localhost:3000/docs</span>
+          Backend Swagger:{" "}
+          <span className="font-mono">https://nestjs-showcase-backend.up.railway.app/docs</span>
         </div>
       </div>
     </div>
